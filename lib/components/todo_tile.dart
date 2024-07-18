@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 class TodoTile extends StatefulWidget {
   final String taskName;
   final bool? isTaskCompleted;
+  final VoidCallback handleTaskDelete;
 
   const TodoTile({
     super.key,
     required this.taskName,
     required this.isTaskCompleted,
+    required this.handleTaskDelete,
   });
 
   @override
@@ -43,8 +45,9 @@ class _TodoTileState extends State<TodoTile> {
             borderRadius: BorderRadius.circular(2),
           ),
           child: Padding(
-            padding: EdgeInsets.only(top: 5, right: 20, bottom: 5, left: 0),
+            padding: EdgeInsets.only(top: 5, right: 5, bottom: 5, left: 0),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Checkbox(
                   value: _isTaskCompleted,
@@ -54,7 +57,23 @@ class _TodoTileState extends State<TodoTile> {
                   activeColor: Colors.teal.shade300,
                   checkColor: Colors.grey.shade800,
                 ),
-                Text(widget.taskName)
+                Expanded(
+                  child: Text(
+                    widget.taskName,
+                    style: TextStyle(
+                        color: _isTaskCompleted
+                            ? Colors.blueGrey.shade200
+                            : Colors.white,
+                        decoration: _isTaskCompleted
+                            ? (TextDecoration.lineThrough)
+                            : TextDecoration.none),
+                  ),
+                ),
+                IconButton(
+                  onPressed: widget.handleTaskDelete,
+                  icon: Icon(Icons.delete),
+                  visualDensity: VisualDensity.compact,
+                ),
               ],
             ),
           ),
