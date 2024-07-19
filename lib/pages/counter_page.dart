@@ -82,6 +82,9 @@ class _CounterPageState extends State<CounterPage> {
                 FilteringTextInputFormatter.digitsOnly,
               ],
               style: TextStyle(fontSize: 20),
+              decoration: InputDecoration(
+                hintText: "Enter number",
+              ),
               onSubmitted: (value) {
                 if (value.isNotEmpty) {
                   var num = int.tryParse(value) ?? 0;
