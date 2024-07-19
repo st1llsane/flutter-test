@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_first/components/todo_dialog.dart';
 import 'package:flutter_first/components/todo_tile.dart';
+import 'package:flutter_first/db/todo_db.dart';
 import 'package:flutter_first/models/todo.dart';
 
 class Homepage extends StatefulWidget {
@@ -13,8 +14,22 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-  final List<Todo> todoList = [];
+  static TodoDB todoDB = TodoDB();
+  Future<List<Todo>>? todos;
   final textFieldController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    fetchTodos();
+  }
+
+  void fetchTodos() {
+    setState(() {
+      todos = todoDB.fetchAll();
+    });
+  }
 
   void handleShowDialog() {
     showDialog(
@@ -29,27 +44,27 @@ class _HomepageState extends State<Homepage> {
     );
   }
 
-  void createNewTask() {
-    setState(() {
-      todoList.add(
-          Todo(taskName: textFieldController.text, isTaskCompleted: false));
-    });
+  void onCreateTask() async {
+    await todoDB.create(taskName: textFieldController.text);
+    fetchTodos();
+    textFieldController.clear();
+
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
-  void onCreateTask() {
-    createNewTask();
-    textFieldController.clear();
-    Navigator.of(context).pop();
+  void onUpdateTask(int id, int isDone) async {
+    await todoDB.update(id, isDone);
+    fetchTodos();
+  }
+
+  void onDeleteTask(int id) async {
+    await todoDB.delete(id);
+    fetchTodos();
   }
 
   void onCancelCreateTask() {
     Navigator.of(context).pop();
-  }
-
-  void handleTaskDelete(int index) {
-    setState(() {
-      todoList.removeAt(index);
-    });
   }
 
   @override
@@ -60,17 +75,35 @@ class _HomepageState extends State<Homepage> {
         centerTitle: true,
         title: Text("TODO"),
       ),
-      body: ListView.builder(
-        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 0),
-        itemCount: todoList.length,
-        itemBuilder: (context, index) {
-          return TodoTile(
-            taskName: todoList[index].taskName,
-            isTaskCompleted: todoList[index].isTaskCompleted,
-            handleTaskDelete: () => handleTaskDelete(index),
-          );
-        },
-      ),
+      body: FutureBuilder<List<Todo>>(
+          future: todos,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: TextStyle(color: Colors.red),
+                ),
+              );
+            } else {
+              List<Todo> todoList = snapshot.data ?? [];
+
+              return ListView.builder(
+                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 0),
+                itemCount: todoList.length,
+                itemBuilder: (context, index) {
+                  return TodoTile(
+                    id: todoList[index].id,
+                    taskName: todoList[index].taskName,
+                    isDone: todoList[index].isDone,
+                    onUpdateTask: () => onUpdateTask(todoList[index].id,
+                        todoList[index].isDone == 0 ? 1 : 0),
+                    onDeleteTask: () => onDeleteTask(todoList[index].id),
+                  );
+                },
+              );
+            }
+          }),
       floatingActionButton: FloatingActionButton(
         onPressed: handleShowDialog,
         child: Icon(Icons.add),

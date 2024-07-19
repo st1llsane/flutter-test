@@ -3,15 +3,19 @@
 import 'package:flutter/material.dart';
 
 class TodoTile extends StatefulWidget {
+  final int id;
   final String taskName;
-  final bool? isTaskCompleted;
-  final VoidCallback handleTaskDelete;
+  final int isDone;
+  final VoidCallback onUpdateTask;
+  final VoidCallback onDeleteTask;
 
   const TodoTile({
     super.key,
+    required this.id,
     required this.taskName,
-    required this.isTaskCompleted,
-    required this.handleTaskDelete,
+    required this.isDone,
+    required this.onUpdateTask,
+    required this.onDeleteTask,
   });
 
   @override
@@ -19,26 +23,12 @@ class TodoTile extends StatefulWidget {
 }
 
 class _TodoTileState extends State<TodoTile> {
-  bool _isTaskCompleted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _isTaskCompleted = widget.isTaskCompleted ?? false;
-  }
-
-  void handleTaskComplete(bool? isCompleted) {
-    setState(() {
-      _isTaskCompleted = isCompleted ?? false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
       child: GestureDetector(
-        onTap: () => handleTaskComplete(!_isTaskCompleted),
+        onTap: widget.onUpdateTask,
         child: Container(
           decoration: BoxDecoration(
             color: Colors.blueGrey.shade400,
@@ -50,9 +40,8 @@ class _TodoTileState extends State<TodoTile> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Checkbox(
-                  value: _isTaskCompleted,
-                  onChanged: (bool? isCompleted) =>
-                      handleTaskComplete(isCompleted),
+                  value: widget.isDone == 0 ? false : true,
+                  onChanged: (bool? isCompleted) => widget.onUpdateTask,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   activeColor: Colors.teal.shade300,
                   checkColor: Colors.grey.shade800,
@@ -61,16 +50,16 @@ class _TodoTileState extends State<TodoTile> {
                   child: Text(
                     widget.taskName,
                     style: TextStyle(
-                        color: _isTaskCompleted
+                        color: widget.isDone == 1
                             ? Colors.blueGrey.shade200
                             : Colors.white,
-                        decoration: _isTaskCompleted
+                        decoration: widget.isDone == 1
                             ? (TextDecoration.lineThrough)
                             : TextDecoration.none),
                   ),
                 ),
                 IconButton(
-                  onPressed: widget.handleTaskDelete,
+                  onPressed: widget.onDeleteTask,
                   icon: Icon(Icons.delete),
                   visualDensity: VisualDensity.compact,
                 ),
